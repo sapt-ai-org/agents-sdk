@@ -1,0 +1,50 @@
+{
+  "name": "@sapt/agents",
+  "version": "0.1.0",
+  "description": "Official TypeScript SDK for Sapt AI agents",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "sapt",
+    "ai",
+    "agents",
+    "sdk",
+    "llm",
+    "streaming",
+    "sse"
+  ],
+  "author": "Sapt AI <hello@sapt.ai>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sapt-ai-org/agents-sdk.git"
+  },
+  "homepage": "https://github.com/sapt-ai-org/agents-sdk",
+  "bugs": {
+    "url": "https://github.com/sapt-ai-org/agents-sdk/issues"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0"
+  }
+}
