@@ -1,14 +1,16 @@
-import { apiFetch } from './transport/http'
+import { apiFetch, buildQueryString } from './transport/http'
 import type {
   AgentDefinition,
   CreateAgentDefinitionInput,
+  ListOptions,
+  PaginatedResult,
   UpdateAgentDefinitionInput,
 } from './types'
 
 /** CRUD operations for agent definitions scoped to the current project. */
 export interface AgentsNamespace {
-  /** List all agent definitions in the project. */
-  list(): Promise<AgentDefinition[]>
+  /** List agent definitions in the project with optional pagination. */
+  list(options?: ListOptions): Promise<PaginatedResult<AgentDefinition>>
   /** Get a single agent definition by ID. */
   get(agentId: string): Promise<AgentDefinition>
   /** Create a new agent definition. */
@@ -24,29 +26,40 @@ export function createAgentsNamespace(
   apiKey: string,
   projectId: string
 ): AgentsNamespace {
-  const base = `/v1/projects/${projectId}/agents`
+  const base = `/projects/${projectId}/agents`
 
   return {
-    list() {
-      return apiFetch<AgentDefinition[]>(endpoint, apiKey, base)
+    async list(options) {
+      const qs = buildQueryString({
+        limit: options?.limit,
+        offset: options?.offset,
+      })
+      const res = await apiFetch<{
+        agents: AgentDefinition[]
+        pagination: { limit: number; offset: number; hasMore: boolean }
+      }>(endpoint, apiKey, `${base}${qs}`)
+      return { items: res.agents, pagination: res.pagination }
     },
 
-    get(agentId) {
-      return apiFetch<AgentDefinition>(endpoint, apiKey, `${base}/${agentId}`)
+    async get(agentId) {
+      const res = await apiFetch<{ agent: AgentDefinition }>(endpoint, apiKey, `${base}/${agentId}`)
+      return res.agent
     },
 
-    create(input) {
-      return apiFetch<AgentDefinition>(endpoint, apiKey, base, {
+    async create(input) {
+      const res = await apiFetch<{ agent: AgentDefinition }>(endpoint, apiKey, base, {
         method: 'POST',
         body: JSON.stringify(input),
       })
+      return res.agent
     },
 
-    update(agentId, input) {
-      return apiFetch<AgentDefinition>(endpoint, apiKey, `${base}/${agentId}`, {
+    async update(agentId, input) {
+      const res = await apiFetch<{ agent: AgentDefinition }>(endpoint, apiKey, `${base}/${agentId}`, {
         method: 'PUT',
         body: JSON.stringify(input),
       })
+      return res.agent
     },
 
     async delete(agentId) {

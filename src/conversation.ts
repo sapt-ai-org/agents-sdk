@@ -54,8 +54,8 @@ export function createConversation(
     const token = await exchangeApiKeyForWsToken(endpoint, apiKey)
     const wsEndpoint = endpoint.replace(/^http/, 'ws')
     const path = conversationId
-      ? `/v1/agents/${agentId}/ws/${conversationId}`
-      : `/v1/agents/${agentId}/ws`
+      ? `/agents/${agentId}/ws/${conversationId}`
+      : `/agents/${agentId}/ws`
     return `${wsEndpoint}${path}?token=${encodeURIComponent(token)}`
   }
 
@@ -76,13 +76,13 @@ export function createConversation(
     },
 
     async approveAction(actionId: string) {
-      await apiFetch<unknown>(endpoint, apiKey, `/v1/actions/${actionId}/approve`, {
+      await apiFetch<unknown>(endpoint, apiKey, `/actions/${actionId}/approve`, {
         method: 'POST',
       })
     },
 
     async rejectAction(actionId: string, reason?: string) {
-      await apiFetch<unknown>(endpoint, apiKey, `/v1/actions/${actionId}/reject`, {
+      await apiFetch<unknown>(endpoint, apiKey, `/actions/${actionId}/reject`, {
         method: 'POST',
         body: JSON.stringify({ reason }),
       })

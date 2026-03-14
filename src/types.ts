@@ -47,7 +47,10 @@ export interface AgentDefinition {
   allowedRoles: string[] | null
   /** Maximum tool-call steps per run. */
   maxSteps: number
-  /** LLM model override, or null for the platform default. */
+  /**
+   * LLM model override, or null for the platform default.
+   * Supported: 'claude-sonnet-4-6', 'claude-haiku-4-5', etc.
+   */
   model: string | null
   /** Arbitrary key-value metadata. */
   metadata: Record<string, unknown>
@@ -77,7 +80,10 @@ export interface CreateAgentDefinitionInput {
   allowedRoles?: string[]
   /** Maximum tool-call steps per run. */
   maxSteps?: number
-  /** LLM model override. */
+  /**
+   * LLM model override.
+   * Supported: 'claude-sonnet-4-6', 'claude-haiku-4-5', etc.
+   */
   model?: string
   /** Arbitrary key-value metadata. */
   metadata?: Record<string, unknown>
@@ -103,7 +109,10 @@ export interface UpdateAgentDefinitionInput {
   allowedRoles?: string[] | null
   /** Maximum tool-call steps per run. */
   maxSteps?: number
-  /** LLM model override. Pass null to revert to platform default. */
+  /**
+   * LLM model override. Pass null to revert to platform default.
+   * Supported: 'claude-sonnet-4-6', 'claude-haiku-4-5', etc.
+   */
   model?: string | null
   /** Arbitrary key-value metadata. */
   metadata?: Record<string, unknown>
@@ -186,12 +195,123 @@ export type AgentChunk =
  */
 export type ConversationChunk = { type: 'connected'; conversationId: string } | AgentChunk
 
+/** Token usage information from an agent run. */
+export interface Usage {
+  /** Number of input tokens consumed. */
+  inputTokens: number
+  /** Number of output tokens generated. */
+  outputTokens: number
+  /** Model used for the run. */
+  model: string
+}
+
 /** Result of a non-streaming single-turn agent run. */
 export interface RunResult {
   /** The agent's complete text response. */
   text: string
   /** Conversation ID that can be used to continue the conversation. */
   conversationId: string
+  /** Token usage information. */
+  usage: Usage
+}
+
+/** A memory entry summary as returned by list operations (no content field). */
+export interface MemoryEntrySummary {
+  /** Unique identifier. */
+  id: string
+  /** Project this entry belongs to. */
+  projectId: string
+  /** URL-safe unique slug used to reference this entry. */
+  slug: string
+  /** Human-readable title. */
+  title: string
+  /** Short description of the entry's content. */
+  description: string
+  /** Arbitrary key-value metadata. */
+  metadata: Record<string, unknown> | null
+  /** ISO-8601 creation timestamp. */
+  createdAt: string
+  /** ISO-8601 last-updated timestamp. */
+  updatedAt: string
+}
+
+/** Options for paginated list operations. */
+export interface ListOptions {
+  /** Maximum number of items to return (1–100). */
+  limit?: number
+  /** Number of items to skip. */
+  offset?: number
+}
+
+/** A paginated list result. */
+export interface PaginatedResult<T> {
+  /** The items in this page. */
+  items: T[]
+  /** Pagination metadata. */
+  pagination: { limit: number; offset: number; hasMore: boolean }
+}
+
+/** A project as returned by the API. */
+export interface Project {
+  id: string
+  name: string
+  slug: string
+  type: string
+  urls: Array<{ name: string; url: string }> | null
+  githubRepo: string | null
+  brandMetadata: Record<string, unknown> | null
+  serpSettings: Record<string, unknown> | null
+  plan: string | null
+  onboardingCompleted: boolean
+  onboardingConversationId: string | null
+  createdAt: string
+}
+
+/** A team member as returned by the API. */
+export interface TeamMember {
+  userId: string
+  name: string | null
+  email: string
+  image: string | null
+  roles: Array<{ id: string; name: string }>
+  createdAt: string
+}
+
+/** Input for inviting a team member by email. */
+export interface InviteInput {
+  email: string
+  projectRoleId: string
+  redirectUrl?: string
+}
+
+/** Result of an invitation. */
+export interface InviteResult {
+  success: boolean
+  action: 'invited' | 'skipped'
+  invitationId: string | null
+  reason?: string
+}
+
+/** Input for adding an existing user to the team. */
+export interface AddMemberInput {
+  userId: string
+  projectRoleId: string
+}
+
+/** Result of adding a member. */
+export interface AddMemberResult {
+  success: boolean
+  userId: string
+  projectId: string
+  roleIds: string[]
+}
+
+/** Result of updating a member's roles. */
+export interface UpdateRolesResult {
+  success: boolean
+  userId: string
+  projectId: string
+  roles: Array<{ id: string; name: string }>
 }
 
 /** Options for opening a multi-turn conversation. */

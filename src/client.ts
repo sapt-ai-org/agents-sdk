@@ -2,7 +2,9 @@ import { createActionsNamespace, type ActionsNamespace } from './actions'
 import { createAgentsNamespace, type AgentsNamespace } from './agents'
 import { createConversation, type Conversation } from './conversation'
 import { createMemoryNamespace, type MemoryNamespace } from './memory'
-import { sseStream } from './transport/http'
+import { createProjectsNamespace, type ProjectsNamespace } from './projects'
+import { createTeamNamespace, type TeamNamespace } from './team'
+import { apiFetch, sseStream } from './transport/http'
 import type { AgentChunk, ConversationOptions, RunResult, SaptAgentClientConfig } from './types'
 
 /** The main SDK client exposing agent runs, conversations, memory, and action resolution. */
@@ -13,6 +15,10 @@ export interface SaptAgentClient {
   readonly memory: MemoryNamespace
   /** Out-of-band pending action resolution. */
   readonly actions: ActionsNamespace
+  /** Project listing and retrieval. */
+  readonly projects: ProjectsNamespace
+  /** Team management operations. */
+  readonly team: TeamNamespace
 
   /**
    * Single-turn run — sends a message and returns the complete text response.
@@ -78,35 +84,32 @@ export function createSaptAgentClient(config: SaptAgentClientConfig): SaptAgentC
   const agents = createAgentsNamespace(base, apiKey, projectId)
   const memory = createMemoryNamespace(base, apiKey, projectId)
   const actions = createActionsNamespace(base, apiKey)
+  const projects = createProjectsNamespace(base, apiKey)
+  const team = createTeamNamespace(base, apiKey, projectId)
 
   return {
     agents,
     memory,
     actions,
+    projects,
+    team,
 
     async run(agentId, message) {
-      let text = ''
-      let conversationId: string | undefined
-
-      for await (const chunk of sseStream(base, apiKey, `/v1/agents/${agentId}/run`, { message })) {
-        if (chunk.type === 'text') {
-          text += chunk.content
-        } else if (chunk.type === 'done') {
-          conversationId = chunk.conversationId
-        } else if (chunk.type === 'error') {
-          throw new Error(chunk.error)
+      const res = await apiFetch<{ conversationId: string; runId: string; text: string; usage: { inputTokens: number; outputTokens: number; model: string } }>(
+        base,
+        apiKey,
+        `/agents/${agentId}/run`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ message, projectId }),
         }
-      }
+      )
 
-      if (!conversationId) {
-        throw new Error('Agent run ended without a done chunk')
-      }
-
-      return { text, conversationId }
+      return { text: res.text, conversationId: res.conversationId, usage: res.usage }
     },
 
     stream(agentId, message) {
-      return sseStream(base, apiKey, `/v1/agents/${agentId}/run`, { message })
+      return sseStream(base, apiKey, `/agents/${agentId}/run`, { message, projectId })
     },
 
     conversation(agentId, options) {

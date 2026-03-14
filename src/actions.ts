@@ -11,13 +11,13 @@ export interface ActionsNamespace {
 export function createActionsNamespace(endpoint: string, apiKey: string): ActionsNamespace {
   return {
     async approve(actionId) {
-      await apiFetch<unknown>(endpoint, apiKey, `/v1/actions/${actionId}/approve`, {
+      await apiFetch<unknown>(endpoint, apiKey, `/actions/${actionId}/approve`, {
         method: 'POST',
       })
     },
 
     async reject(actionId, reason) {
-      await apiFetch<unknown>(endpoint, apiKey, `/v1/actions/${actionId}/reject`, {
+      await apiFetch<unknown>(endpoint, apiKey, `/actions/${actionId}/reject`, {
         method: 'POST',
         body: JSON.stringify({ reason }),
       })

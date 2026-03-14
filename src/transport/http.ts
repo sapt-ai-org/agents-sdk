@@ -1,12 +1,43 @@
+import { SaptApiError } from '../errors'
 import type { AgentChunk, ServerMessage } from '../types'
 
-async function extractErrorMessage(res: Response, fallback: string): Promise<string> {
+async function extractError(
+  res: Response,
+  fallback: string
+): Promise<{ message: string; code?: string }> {
   try {
-    const body = (await res.json()) as { error?: string; message?: string }
-    return body.error ?? body.message ?? fallback
+    const body = (await res.json()) as {
+      error?: string | { name?: string; message?: string }
+      message?: string
+      code?: string
+    }
+    if (typeof body.error === 'object' && body.error !== null) {
+      return {
+        message: body.error.message ?? body.error.name ?? fallback,
+        code: body.code,
+      }
+    }
+    return {
+      message: body.error ?? body.message ?? fallback,
+      code: body.code,
+    }
   } catch {
-    return fallback
+    return { message: fallback }
   }
+}
+
+/**
+ * Builds a query string from an object of key-value pairs.
+ * Omits undefined/null values. Returns '' if no params, or '?key=val&...' otherwise.
+ */
+export function buildQueryString(params: Record<string, string | number | undefined | null>): string {
+  const parts: string[] = []
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null) {
+      parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    }
+  }
+  return parts.length > 0 ? `?${parts.join('&')}` : ''
 }
 
 /**
@@ -29,8 +60,12 @@ export async function apiFetch<T>(
   })
 
   if (!res.ok) {
-    const message = await extractErrorMessage(res, `${res.status} ${res.statusText}`)
-    throw new Error(message)
+    const { message, code } = await extractError(res, `${res.status} ${res.statusText}`)
+    const retryAfter =
+      res.status === 429
+        ? parseRetryAfter(res.headers.get('Retry-After'))
+        : undefined
+    throw new SaptApiError(message, res.status, code, retryAfter)
   }
 
   return res.json() as Promise<T>
@@ -60,12 +95,16 @@ export async function* sseStream(
   })
 
   if (!res.ok) {
-    const message = await extractErrorMessage(res, `${res.status} ${res.statusText}`)
-    throw new Error(message)
+    const { message, code } = await extractError(res, `${res.status} ${res.statusText}`)
+    const retryAfter =
+      res.status === 429
+        ? parseRetryAfter(res.headers.get('Retry-After'))
+        : undefined
+    throw new SaptApiError(message, res.status, code, retryAfter)
   }
 
   if (!res.body) {
-    throw new Error('Response has no body')
+    throw new SaptApiError('Response has no body', 502)
   }
 
   const reader = res.body.getReader()
@@ -146,4 +185,10 @@ function serverMessageToChunk(msg: ServerMessage): AgentChunk | null {
     default:
       return null
   }
+}
+
+function parseRetryAfter(header: string | null): number | undefined {
+  if (!header) return undefined
+  const seconds = Number(header)
+  return Number.isFinite(seconds) ? seconds : undefined
 }

@@ -3,7 +3,7 @@
  * The JWT is passed as a query parameter on the WebSocket URL.
  */
 export async function exchangeApiKeyForWsToken(endpoint: string, apiKey: string): Promise<string> {
-  const res = await fetch(`${endpoint}/v1/auth/ws-token`, {
+  const res = await fetch(`${endpoint}/auth/ws-token`, {
     method: 'POST',
     headers: {
       Authorization: `ApiKey ${apiKey}`,

@@ -1,11 +1,18 @@
-import { apiFetch } from './transport/http'
-import type { CreateMemoryEntryInput, MemoryEntry, UpdateMemoryEntryInput } from './types'
+import { apiFetch, buildQueryString } from './transport/http'
+import type {
+  CreateMemoryEntryInput,
+  ListOptions,
+  MemoryEntry,
+  MemoryEntrySummary,
+  PaginatedResult,
+  UpdateMemoryEntryInput,
+} from './types'
 
 /** CRUD operations for memory entries scoped to the current project. */
 export interface MemoryNamespace {
-  /** List all memory entries in the project. */
-  list(): Promise<MemoryEntry[]>
-  /** Get a single memory entry by slug. */
+  /** List memory entries in the project with optional pagination. Returns summaries (no content). */
+  list(options?: ListOptions): Promise<PaginatedResult<MemoryEntrySummary>>
+  /** Get a single memory entry by slug (includes content). */
   get(slug: string): Promise<MemoryEntry>
   /** Create a new memory entry. */
   create(input: CreateMemoryEntryInput): Promise<MemoryEntry>
@@ -20,29 +27,40 @@ export function createMemoryNamespace(
   apiKey: string,
   projectId: string
 ): MemoryNamespace {
-  const base = `/v1/projects/${projectId}/memory-entries`
+  const base = `/projects/${projectId}/memory-entries`
 
   return {
-    list() {
-      return apiFetch<MemoryEntry[]>(endpoint, apiKey, base)
+    async list(options) {
+      const qs = buildQueryString({
+        limit: options?.limit,
+        offset: options?.offset,
+      })
+      const res = await apiFetch<{
+        entries: MemoryEntrySummary[]
+        pagination: { limit: number; offset: number; hasMore: boolean }
+      }>(endpoint, apiKey, `${base}${qs}`)
+      return { items: res.entries, pagination: res.pagination }
     },
 
-    get(slug) {
-      return apiFetch<MemoryEntry>(endpoint, apiKey, `${base}/${encodeURIComponent(slug)}`)
+    async get(slug) {
+      const res = await apiFetch<{ entry: MemoryEntry }>(endpoint, apiKey, `${base}/${encodeURIComponent(slug)}`)
+      return res.entry
     },
 
-    create(input) {
-      return apiFetch<MemoryEntry>(endpoint, apiKey, base, {
+    async create(input) {
+      const res = await apiFetch<{ entry: MemoryEntry }>(endpoint, apiKey, base, {
         method: 'POST',
         body: JSON.stringify(input),
       })
+      return res.entry
     },
 
-    update(slug, input) {
-      return apiFetch<MemoryEntry>(endpoint, apiKey, `${base}/${encodeURIComponent(slug)}`, {
+    async update(slug, input) {
+      const res = await apiFetch<{ entry: MemoryEntry }>(endpoint, apiKey, `${base}/${encodeURIComponent(slug)}`, {
         method: 'PUT',
         body: JSON.stringify(input),
       })
+      return res.entry
     },
 
     async delete(slug) {
