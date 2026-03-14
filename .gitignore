@@ -2,3 +2,4 @@ node_modules/
 dist/
 .tsbuildinfo
 *.tsbuildinfo
+notes.md
