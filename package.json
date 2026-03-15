@@ -12,7 +12,13 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "typesVersions": { "*": { "*": ["dist/index.d.ts"] } },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist"
   ],
@@ -23,6 +29,10 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/*.test.ts",
+    "test:integration": "vitest run tests/integration/",
+    "test:watch": "vitest",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -45,7 +55,9 @@
     "url": "https://github.com/sapt-ai-org/agents-sdk/issues"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.0"
   }
 }

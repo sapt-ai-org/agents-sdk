@@ -4,17 +4,19 @@ import type { AgentChunk, ServerMessage } from '../types'
 async function extractError(
   res: Response,
   fallback: string
-): Promise<{ message: string; code?: string }> {
+): Promise<{ message: string; code?: string; details?: Record<string, unknown> }> {
   try {
     const body = (await res.json()) as {
-      error?: string | { name?: string; message?: string }
+      // New structured format: { error: { code, message, details } }
+      error?: string | { code?: string; name?: string; message?: string; details?: Record<string, unknown> }
       message?: string
       code?: string
     }
     if (typeof body.error === 'object' && body.error !== null) {
       return {
         message: body.error.message ?? body.error.name ?? fallback,
-        code: body.code,
+        code: body.error.code ?? body.code,
+        details: body.error.details,
       }
     }
     return {
@@ -60,12 +62,12 @@ export async function apiFetch<T>(
   })
 
   if (!res.ok) {
-    const { message, code } = await extractError(res, `${res.status} ${res.statusText}`)
+    const { message, code, details } = await extractError(res, `${res.status} ${res.statusText}`)
     const retryAfter =
       res.status === 429
         ? parseRetryAfter(res.headers.get('Retry-After'))
         : undefined
-    throw new SaptApiError(message, res.status, code, retryAfter)
+    throw new SaptApiError(message, res.status, code, details, retryAfter)
   }
 
   return res.json() as Promise<T>
@@ -95,12 +97,12 @@ export async function* sseStream(
   })
 
   if (!res.ok) {
-    const { message, code } = await extractError(res, `${res.status} ${res.statusText}`)
+    const { message, code, details } = await extractError(res, `${res.status} ${res.statusText}`)
     const retryAfter =
       res.status === 429
         ? parseRetryAfter(res.headers.get('Retry-After'))
         : undefined
-    throw new SaptApiError(message, res.status, code, retryAfter)
+    throw new SaptApiError(message, res.status, code, details, retryAfter)
   }
 
   if (!res.body) {

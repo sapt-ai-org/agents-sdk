@@ -1,8 +1,11 @@
 import { createActionsNamespace, type ActionsNamespace } from './actions'
 import { createAgentsNamespace, type AgentsNamespace } from './agents'
 import { createConversation, type Conversation } from './conversation'
+import { createCreditsNamespace, type CreditsNamespace } from './credits'
 import { createMemoryNamespace, type MemoryNamespace } from './memory'
+import { createPartnerNamespace, type PartnerNamespace } from './partner'
 import { createProjectsNamespace, type ProjectsNamespace } from './projects'
+import { createSocialsNamespace, type SocialsNamespace } from './socials'
 import { createTeamNamespace, type TeamNamespace } from './team'
 import { apiFetch, sseStream } from './transport/http'
 import type { AgentChunk, ConversationOptions, RunResult, SaptAgentClientConfig } from './types'
@@ -19,6 +22,12 @@ export interface SaptAgentClient {
   readonly projects: ProjectsNamespace
   /** Team management operations. */
   readonly team: TeamNamespace
+  /** Social media account management — connect, health check, reconnect. */
+  readonly socials: SocialsNamespace
+  /** Credit balance and transaction history. */
+  readonly credits: CreditsNamespace
+  /** Partner-level operations (only available with partner API keys). */
+  readonly partner: PartnerNamespace
 
   /**
    * Single-turn run — sends a message and returns the complete text response.
@@ -47,11 +56,11 @@ export interface SaptAgentClient {
  *
  * @example
  * ```ts
- * import { createSaptAgentClient } from '@sapt/agents-sdk'
+ * import { createSaptAgentClient } from '@sapt/agents'
  *
  * const sapt = createSaptAgentClient({
  *   projectId: 'proj_abc123',
- *   apiKey: 'sk_live_...',
+ *   apiKey: 'sapt_live_...',
  *   endpoint: 'https://api.sapt.ai',
  * })
  *
@@ -63,12 +72,16 @@ export interface SaptAgentClient {
  *   if (chunk.type === 'text') process.stdout.write(chunk.content)
  * }
  *
- * // Multi-turn conversation
- * const conv = sapt.conversation('agent-id')
- * for await (const chunk of conv.stream('Hi there')) {
- *   if (chunk.type === 'text') process.stdout.write(chunk.content)
- * }
- * conv.close()
+ * // Social connect
+ * const link = await sapt.socials.createConnectLink({
+ *   projectId: 'proj_abc123',
+ *   platform: 'meta',
+ * })
+ * console.log('Connect here:', link.connectUrl)
+ *
+ * // Check credit balance
+ * const balance = await sapt.credits.getBalance('proj_abc123')
+ * console.log('Credits:', balance.credits)
  * ```
  */
 export function createSaptAgentClient(config: SaptAgentClientConfig): SaptAgentClient {
@@ -86,6 +99,9 @@ export function createSaptAgentClient(config: SaptAgentClientConfig): SaptAgentC
   const actions = createActionsNamespace(base, apiKey)
   const projects = createProjectsNamespace(base, apiKey)
   const team = createTeamNamespace(base, apiKey, projectId)
+  const socials = createSocialsNamespace(base, apiKey)
+  const credits = createCreditsNamespace(base, apiKey, projectId)
+  const partner = createPartnerNamespace(base, apiKey)
 
   return {
     agents,
@@ -93,6 +109,9 @@ export function createSaptAgentClient(config: SaptAgentClientConfig): SaptAgentC
     actions,
     projects,
     team,
+    socials,
+    credits,
+    partner,
 
     async run(agentId, message) {
       const res = await apiFetch<{ conversationId: string; runId: string; text: string; usage: { inputTokens: number; outputTokens: number; model: string } }>(

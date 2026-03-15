@@ -4,3 +4,4 @@ dist/
 *.tsbuildinfo
 notes.md
 PLAN-FUTURE-ROADMAP.md
+.env

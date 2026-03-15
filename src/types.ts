@@ -262,9 +262,104 @@ export interface Project {
   brandMetadata: Record<string, unknown> | null
   serpSettings: Record<string, unknown> | null
   plan: string | null
+  partnerId: string | null
+  isPartner: boolean
   onboardingCompleted: boolean
   onboardingConversationId: string | null
   createdAt: string
+}
+
+// ── Social Connect ──────────────────────────────
+
+/** Input for creating a social connect link. */
+export interface CreateConnectLinkInput {
+  /** Project to connect the social account to. */
+  projectId: string
+  /** OAuth platform ('meta' for Instagram + Facebook). */
+  platform: 'meta'
+  /** Where to redirect user after OAuth completes (partner's domain). */
+  redirectUrl?: string
+  /** URL to POST webhook when connection completes. */
+  webhookUrl?: string
+}
+
+/** Response from creating a connect link. */
+export interface ConnectLinkResponse {
+  /** URL the user should open in a browser to start OAuth. */
+  connectUrl: string
+  /** Session ID for polling completion status. */
+  sessionId: string
+  /** When this link expires (ISO 8601). */
+  expiresAt: string
+}
+
+/** Status of a social connect session. */
+export interface ConnectStatus {
+  sessionId: string
+  status: 'pending' | 'completed' | 'expired' | 'failed'
+  accounts: ConnectedAccount[] | null
+  error: string | null
+  expiresAt: string
+  completedAt: string | null
+}
+
+/** An account connected through the OAuth flow. */
+export interface ConnectedAccount {
+  id: string
+  platform: 'instagram' | 'facebook'
+  username: string
+  displayName: string | null
+  profilePictureUrl: string | null
+}
+
+/** A connected social account with profile data. */
+export interface SocialAccount {
+  id: string
+  platform: string
+  username: string
+  displayName: string | null
+  profilePictureUrl: string | null
+  profileUrl: string | null
+  followersCount: number | null
+  isActive: boolean
+}
+
+/** Health status of a social account's token/connection. */
+export interface AccountHealth {
+  id: string
+  platform: string
+  username: string
+  status: 'healthy' | 'expiring_soon' | 'expired' | 'revoked'
+  tokenExpiresAt: string | null
+  daysUntilExpiry: number | null
+  issues: string[]
+}
+
+// ── Credits ──────────────────────────────
+
+/** Credit balance for a project. */
+export interface CreditBalance {
+  credits: number
+  balanceMicro: string
+  updatedAt: string | null
+}
+
+/** A credit transaction entry. */
+export interface CreditTransaction {
+  id: string
+  type: string
+  credits: number
+  balanceAfterCredits: number
+  description: string | null
+  createdAt: string
+}
+
+// ── Partner ──────────────────────────────
+
+/** Partner credit pool balance. */
+export interface PartnerCreditBalance {
+  balanceMicro: number
+  balanceCredits: number
 }
 
 /** A team member as returned by the API. */
