@@ -8,18 +8,23 @@ export interface ActionsNamespace {
   reject(actionId: string, reason?: string): Promise<void>
 }
 
-export function createActionsNamespace(endpoint: string, apiKey: string): ActionsNamespace {
+export function createActionsNamespace(
+  endpoint: string,
+  apiKey: string,
+  projectId?: string
+): ActionsNamespace {
   return {
     async approve(actionId) {
       await apiFetch<unknown>(endpoint, apiKey, `/actions/${actionId}/approve`, {
         method: 'POST',
+        body: JSON.stringify({ projectId }),
       })
     },
 
     async reject(actionId, reason) {
       await apiFetch<unknown>(endpoint, apiKey, `/actions/${actionId}/reject`, {
         method: 'POST',
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ projectId, reason }),
       })
     },
   }

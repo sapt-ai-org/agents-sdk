@@ -96,7 +96,7 @@ export function createSaptAgentClient(config: SaptAgentClientConfig): SaptAgentC
 
   const agents = createAgentsNamespace(base, apiKey, projectId)
   const memory = createMemoryNamespace(base, apiKey, projectId)
-  const actions = createActionsNamespace(base, apiKey)
+  const actions = createActionsNamespace(base, apiKey, projectId)
   const projects = createProjectsNamespace(base, apiKey)
   const team = createTeamNamespace(base, apiKey, projectId)
   const socials = createSocialsNamespace(base, apiKey)
