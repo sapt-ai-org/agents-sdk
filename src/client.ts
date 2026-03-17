@@ -3,7 +3,6 @@ import { createAgentsNamespace, type AgentsNamespace } from './agents'
 import { createConversation, type Conversation } from './conversation'
 import { createCreditsNamespace, type CreditsNamespace } from './credits'
 import { createMemoryNamespace, type MemoryNamespace } from './memory'
-import { createPartnerNamespace, type PartnerNamespace } from './partner'
 import { createProjectsNamespace, type ProjectsNamespace } from './projects'
 import { createSocialsNamespace, type SocialsNamespace } from './socials'
 import { createTeamNamespace, type TeamNamespace } from './team'
@@ -26,8 +25,6 @@ export interface SaptAgentClient {
   readonly socials: SocialsNamespace
   /** Credit balance and transaction history. */
   readonly credits: CreditsNamespace
-  /** Partner-level operations (only available with partner API keys). */
-  readonly partner: PartnerNamespace
 
   /**
    * Single-turn run — sends a message and returns the complete text response.
@@ -101,7 +98,6 @@ export function createSaptAgentClient(config: SaptAgentClientConfig): SaptAgentC
   const team = createTeamNamespace(base, apiKey, projectId)
   const socials = createSocialsNamespace(base, apiKey)
   const credits = createCreditsNamespace(base, apiKey, projectId)
-  const partner = createPartnerNamespace(base, apiKey)
 
   return {
     agents,
@@ -111,7 +107,6 @@ export function createSaptAgentClient(config: SaptAgentClientConfig): SaptAgentC
     team,
     socials,
     credits,
-    partner,
 
     async run(agentId, message) {
       const res = await apiFetch<{ conversationId: string; runId: string; text: string; usage: { inputTokens: number; outputTokens: number; model: string } }>(

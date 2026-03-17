@@ -18,7 +18,6 @@ describe('createSaptAgentClient', () => {
     expect(client.team).toBeDefined()
     expect(client.socials).toBeDefined()
     expect(client.credits).toBeDefined()
-    expect(client.partner).toBeDefined()
     expect(typeof client.run).toBe('function')
     expect(typeof client.stream).toBe('function')
     expect(typeof client.conversation).toBe('function')

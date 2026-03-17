@@ -6,7 +6,6 @@ export type { Conversation } from './conversation'
 export type { CreditsNamespace } from './credits'
 export { SaptApiError, type SaptErrorCode } from './errors'
 export type { MemoryNamespace } from './memory'
-export type { PartnerNamespace } from './partner'
 export type { ProjectsNamespace } from './projects'
 export type { SocialsNamespace } from './socials'
 export type { TeamNamespace } from './team'
@@ -34,7 +33,6 @@ export type {
   MemoryEntry,
   MemoryEntrySummary,
   PaginatedResult,
-  PartnerCreditBalance,
   Project,
   RunResult,
   SaptAgentClientConfig,

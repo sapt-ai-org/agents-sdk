@@ -262,8 +262,6 @@ export interface Project {
   brandMetadata: Record<string, unknown> | null
   serpSettings: Record<string, unknown> | null
   plan: string | null
-  partnerId: string | null
-  isPartner: boolean
   onboardingCompleted: boolean
   onboardingConversationId: string | null
   createdAt: string
@@ -277,7 +275,7 @@ export interface CreateConnectLinkInput {
   projectId: string
   /** OAuth platform ('meta' for Instagram + Facebook). */
   platform: 'meta'
-  /** Where to redirect user after OAuth completes (partner's domain). */
+  /** Where to redirect user after OAuth completes. */
   redirectUrl?: string
   /** URL to POST webhook when connection completes. */
   webhookUrl?: string
@@ -352,14 +350,6 @@ export interface CreditTransaction {
   balanceAfterCredits: number
   description: string | null
   createdAt: string
-}
-
-// ── Partner ──────────────────────────────
-
-/** Partner credit pool balance. */
-export interface PartnerCreditBalance {
-  balanceMicro: number
-  balanceCredits: number
 }
 
 /** A team member as returned by the API. */
